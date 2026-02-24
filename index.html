@@ -1,9 +1,14 @@
+
+이제 이 파일들을 불러오는 **개선된 index.html**을 만들겠습니다:
+
+```html name=index-with-external-files.html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>폴더 메뉴 시스템</title>
+    <title>폴더 메뉴 시스템 - 동적 파일 로드</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
     <style>
         * {
             margin: 0;
@@ -82,17 +87,11 @@
             flex-direction: column;
         }
         
-        .content h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-        }
-        
-        .content-text {
-            color: #555;
+        .content.markdown-body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            font-size: 16px;
             line-height: 1.6;
-            font-size: 14px;
+            color: #24292e;
         }
         
         .content-placeholder {
@@ -101,9 +100,57 @@
             padding: 60px 20px;
         }
         
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
         .toggle-icon {
             float: right;
             font-size: 12px;
+        }
+
+        .breadcrumb {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -112,74 +159,132 @@
         <!-- 메뉴가 여기에 동적으로 생성됩니다 -->
     </div>
     
-    <div class="content" id="content">
+    <div class="content markdown-body" id="content">
         <div class="content-placeholder">
-            <p>좌측 메뉴에서 항목을 선택하세요</p>
+            <p>👈 좌측 메뉴에서 항목을 선택하세요</p>
         </div>
     </div>
 
     <script>
-        // 메뉴 구조 정의 (나중에 수정 가능)
+        // 메뉴 구조 정의 (파일 경로 포함)
         const menuData = {
             "소개": {
-                "회사 개요": "company-overview",
-                "미션 & 비전": "mission-vision",
-                "팀 소개": "team-intro"
+                "회사 개요": "company-overview.md",
+                "미션 & 비전": "mission-vision.md",
+                "팀 소개": "team-intro.md"
             },
             "서비스": {
-                "서비스 A": "service-a",
-                "서비스 B": "service-b",
-                "가격 정보": "pricing"
+                "서비스 A": "service-a.md",
+                "서비스 B": "service-b.md",
+                "가격 정보": "pricing.md"
             },
             "문서": {
-                "사용 설명서": "user-manual",
-                "FAQ": "faq",
-                "기술 가이드": "tech-guide"
-            }
-        };
-
-        // 파일 내용 정의 (나중에 수정 가능)
-        const fileContent = {
-            "company-overview": {
-                title: "회사 개요",
-                content: "이것은 회사 개요 페이지입니다. 여기에 회사에 대한 상세 정보를 추가하세요."
-            },
-            "mission-vision": {
-                title: "미션 & 비전",
-                content: "우리의 미션과 비전을 설명하는 페이지입니다. 조직의 목표와 가치를 기술하세요."
-            },
-            "team-intro": {
-                title: "팀 소개",
-                content: "팀 멤버들을 소개하는 페이지입니다. 각 팀원의 역할과 경력을 설명하세요."
-            },
-            "service-a": {
-                title: "서비스 A",
-                content: "서비스 A에 대한 상세 설명입니다. 기능, 이점, 사용 방법 등을 작성하세요."
-            },
-            "service-b": {
-                title: "서비스 B",
-                content: "서비스 B에 대한 상세 설명입니다. 특징과 가격 정보를 포함하세요."
-            },
-            "pricing": {
-                title: "가격 정보",
-                content: "다양한 가격 옵션을 설명하는 페이지입니다. 패키지와 비용을 명시하세요."
-            },
-            "user-manual": {
-                title: "사용 설명서",
-                content: "제품 사용에 대한 상세한 설명서입니다. 단계별 가이드를 포함하세요."
-            },
-            "faq": {
-                title: "자주 묻는 질문",
-                content: "고객들이 자주 묻는 질문과 답변을 모아놓은 페이지입니다."
-            },
-            "tech-guide": {
-                title: "기술 가이드",
-                content: "개발자를 위한 기술 문서입니다. API, 설치 방법, 설정 등을 설명하세요."
+                "사용 설명서": "user-manual.md",
+                "FAQ": "faq.md",
+                "기술 가이드": "tech-guide.md"
             }
         };
 
         const sidebar = document.getElementById('sidebar');
         const content = document.getElementById('content');
+        let currentFileId = null;
+
+        // 마크다운을 HTML로 변환 (간단한 버전)
+        function markdownToHtml(markdown) {
+            let html = markdown;
+            
+            // 제목 처리
+            html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+            
+            // 굵은 글씨
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+            
+            // 기울임
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+            
+            // 링크
+            html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+            
+            // 줄 바꿈
+            html = html.replace(/\n\n/g, '</p><p>');
+            html = '<p>' + html + '</p>';
+            
+            // 코드 블록
+            html = html.replace(/```(.*?)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+            
+            // 인라인 코드
+            html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+            
+            // 리스트
+            html = html.replace(/^- (.*?)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            html = html.replace(/^(\d+)\. (.*?)$/gm, '<li>$2</li>');
+            
+            // 표 처리
+            html = html.replace(/\|(.+)\|/g, (match) => {
+                const cells = match.split('|').filter(cell => cell.trim());
+                return '<tr>' + cells.map(cell => `<td>${cell.trim()}</td>`).join('') + '</tr>';
+            });
+            html = html.replace(/(<tr>.*?<\/tr>)/s, '<table>$1</table>');
+            
+            return html;
+        }
+
+        // 파일 불러오기
+        async function loadFile(filePath, itemName, folder) {
+            // 로딩 표시
+            content.innerHTML = `
+                <div class="breadcrumb">${folder} > ${itemName}</div>
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>로딩 중...</p>
+                </div>
+            `;
+
+            try {
+                // 파일 경로 구성 (현재 폴더 기준)
+                const response = await fetch(filePath);
+                
+                if (!response.ok) {
+                    throw new Error(`파일을 찾을 수 없습니다: ${filePath}`);
+                }
+                
+                const markdown = await response.text();
+                
+                // 마크다운을 HTML로 변환
+                const htmlContent = markdownToHtml(markdown);
+                
+                // 콘텐츠 표시
+                content.innerHTML = `
+                    <div class="breadcrumb">${folder} > ${itemName}</div>
+                    <div class="file-content">
+                        ${htmlContent}
+                    </div>
+                `;
+
+                currentFileId = filePath;
+                
+                // 활성화된 메뉴 표시
+                document.querySelectorAll('.submenu-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+            } catch (error) {
+                content.innerHTML = `
+                    <div class="breadcrumb">${folder} > ${itemName}</div>
+                    <div class="error">
+                        <strong>❌ 오류 발생</strong><br>
+                        파일을 불러올 수 없습니다: ${error.message}<br><br>
+                        <small>해결 방법: 마크다운 파일이 같은 폴더에 있는지 확인하세요.</small>
+                    </div>
+                `;
+            }
+        }
 
         // 메뉴 생성
         function renderMenu() {
@@ -198,11 +303,11 @@
                 const submenu = document.createElement('div');
                 submenu.className = 'submenu';
                 
-                for (const [itemName, fileId] of Object.entries(items)) {
+                for (const [itemName, filePath] of Object.entries(items)) {
                     const submenuItem = document.createElement('div');
                     submenuItem.className = 'submenu-item';
                     submenuItem.textContent = itemName;
-                    submenuItem.onclick = () => displayContent(fileId, itemName);
+                    submenuItem.onclick = (e) => loadFile(filePath, itemName, folder);
                     submenu.appendChild(submenuItem);
                 }
                 
@@ -210,23 +315,6 @@
                 folderDiv.appendChild(submenu);
                 sidebar.appendChild(folderDiv);
             }
-        }
-
-        // 컨텐츠 표시
-        function displayContent(fileId, itemName) {
-            const data = fileContent[fileId];
-            if (data) {
-                content.innerHTML = `
-                    <h2>${data.title}</h2>
-                    <div class="content-text">${data.content}</div>
-                `;
-            }
-            
-            // 활성화된 메뉴 표시
-            document.querySelectorAll('.submenu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.classList.add('active');
         }
 
         // 초기화
