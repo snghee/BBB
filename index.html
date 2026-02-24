@@ -1,126 +1,236 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Obsidian Vault</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>폴더 메뉴 시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            background: #f5f5f5;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+        
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .menu-item:hover {
+            background: #34495e;
+            border-left-color: #3498db;
+        }
+        
+        .menu-item.active {
+            background: #3498db;
+            border-left-color: #2980b9;
+            font-weight: bold;
+        }
+        
+        .submenu {
+            padding-left: 40px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .submenu.active {
+            max-height: 500px;
+        }
+        
+        .submenu-item {
+            padding: 10px 0;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.8;
+            transition: all 0.2s ease;
+        }
+        
+        .submenu-item:hover {
+            opacity: 1;
+            padding-left: 10px;
+        }
+        
+        .submenu-item.active {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .content-text {
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .content-placeholder {
+            text-align: center;
+            color: #999;
+            padding: 60px 20px;
+        }
+        
+        .toggle-icon {
+            float: right;
+            font-size: 12px;
+        }
+    </style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <div class="vault-icon">⬡</div>
-      <span class="vault-name">My Vault</span>
-      <button class="sidebar-toggle" id="sidebarToggle" title="사이드바 접기">‹</button>
+    <div class="sidebar" id="sidebar">
+        <!-- 메뉴가 여기에 동적으로 생성됩니다 -->
+    </div>
+    
+    <div class="content" id="content">
+        <div class="content-placeholder">
+            <p>좌측 메뉴에서 항목을 선택하세요</p>
+        </div>
     </div>
 
-    <div class="search-box">
-      <span class="search-icon">⌕</span>
-      <input type="text" placeholder="빠른 검색..." id="searchInput" />
-    </div>
+    <script>
+        // 메뉴 구조 정의 (나중에 수정 가능)
+        const menuData = {
+            "소개": {
+                "회사 개요": "company-overview",
+                "미션 & 비전": "mission-vision",
+                "팀 소개": "team-intro"
+            },
+            "서비스": {
+                "서비스 A": "service-a",
+                "서비스 B": "service-b",
+                "가격 정보": "pricing"
+            },
+            "문서": {
+                "사용 설명서": "user-manual",
+                "FAQ": "faq",
+                "기술 가이드": "tech-guide"
+            }
+        };
 
-    <nav class="file-tree" id="fileTree">
-      <div class="tree-section">
-        <div class="tree-header" data-folder="home">
-          <span class="folder-arrow">▾</span>
-          <span class="folder-icon">📁</span>
-          <span>홈</span>
-        </div>
-        <div class="tree-children open" data-children="home">
-          <div class="tree-item active" data-page="welcome">
-            <span class="file-icon">📄</span>
-            <span>Welcome</span>
-          </div>
-          <div class="tree-item" data-page="about">
-            <span class="file-icon">📄</span>
-            <span>About Me</span>
-          </div>
-        </div>
-      </div>
+        // 파일 내용 정의 (나중에 수정 가능)
+        const fileContent = {
+            "company-overview": {
+                title: "회사 개요",
+                content: "이것은 회사 개요 페이지입니다. 여기에 회사에 대한 상세 정보를 추가하세요."
+            },
+            "mission-vision": {
+                title: "미션 & 비전",
+                content: "우리의 미션과 비전을 설명하는 페이지입니다. 조직의 목표와 가치를 기술하세요."
+            },
+            "team-intro": {
+                title: "팀 소개",
+                content: "팀 멤버들을 소개하는 페이지입니다. 각 팀원의 역할과 경력을 설명하세요."
+            },
+            "service-a": {
+                title: "서비스 A",
+                content: "서비스 A에 대한 상세 설명입니다. 기능, 이점, 사용 방법 등을 작성하세요."
+            },
+            "service-b": {
+                title: "서비스 B",
+                content: "서비스 B에 대한 상세 설명입니다. 특징과 가격 정보를 포함하세요."
+            },
+            "pricing": {
+                title: "가격 정보",
+                content: "다양한 가격 옵션을 설명하는 페이지입니다. 패키지와 비용을 명시하세요."
+            },
+            "user-manual": {
+                title: "사용 설명서",
+                content: "제품 사용에 대한 상세한 설명서입니다. 단계별 가이드를 포함하세요."
+            },
+            "faq": {
+                title: "자주 묻는 질문",
+                content: "고객들이 자주 묻는 질문과 답변을 모아놓은 페이지입니다."
+            },
+            "tech-guide": {
+                title: "기술 가이드",
+                content: "개발자를 위한 기술 문서입니다. API, 설치 방법, 설정 등을 설명하세요."
+            }
+        };
 
-      <div class="tree-section">
-        <div class="tree-header" data-folder="notes">
-          <span class="folder-arrow">▾</span>
-          <span class="folder-icon">📁</span>
-          <span>노트</span>
-        </div>
-        <div class="tree-children open" data-children="notes">
-          <div class="tree-item" data-page="note1">
-            <span class="file-icon">📄</span>
-            <span>아이디어 메모</span>
-          </div>
-          <div class="tree-item" data-page="note2">
-            <span class="file-icon">📄</span>
-            <span>프로젝트 계획</span>
-          </div>
-          <div class="tree-item" data-page="note3">
-            <span class="file-icon">📄</span>
-            <span>독서 기록</span>
-          </div>
-        </div>
-      </div>
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('content');
 
-      <div class="tree-section">
-        <div class="tree-header" data-folder="resources">
-          <span class="folder-arrow">▾</span>
-          <span class="folder-icon">📁</span>
-          <span>리소스</span>
-        </div>
-        <div class="tree-children open" data-children="resources">
-          <div class="tree-item" data-page="links">
-            <span class="file-icon">🔗</span>
-            <span>유용한 링크</span>
-          </div>
-          <div class="tree-item" data-page="graph">
-            <span class="file-icon">🕸</span>
-            <span>그래프 뷰</span>
-          </div>
-        </div>
-      </div>
-    </nav>
+        // 메뉴 생성
+        function renderMenu() {
+            for (const [folder, items] of Object.entries(menuData)) {
+                const folderDiv = document.createElement('div');
+                
+                const folderItem = document.createElement('div');
+                folderItem.className = 'menu-item';
+                folderItem.innerHTML = `${folder} <span class="toggle-icon">▼</span>`;
+                folderItem.onclick = (e) => {
+                    e.stopPropagation();
+                    const submenu = folderDiv.querySelector('.submenu');
+                    submenu.classList.toggle('active');
+                };
+                
+                const submenu = document.createElement('div');
+                submenu.className = 'submenu';
+                
+                for (const [itemName, fileId] of Object.entries(items)) {
+                    const submenuItem = document.createElement('div');
+                    submenuItem.className = 'submenu-item';
+                    submenuItem.textContent = itemName;
+                    submenuItem.onclick = () => displayContent(fileId, itemName);
+                    submenu.appendChild(submenuItem);
+                }
+                
+                folderDiv.appendChild(folderItem);
+                folderDiv.appendChild(submenu);
+                sidebar.appendChild(folderDiv);
+            }
+        }
 
-    <div class="sidebar-footer">
-      <button class="icon-btn" title="새 노트">✏️</button>
-      <button class="icon-btn" title="설정">⚙️</button>
-      <button class="icon-btn theme-toggle" id="themeToggle" title="테마 전환">🌙</button>
-    </div>
-  </aside>
+        // 컨텐츠 표시
+        function displayContent(fileId, itemName) {
+            const data = fileContent[fileId];
+            if (data) {
+                content.innerHTML = `
+                    <h2>${data.title}</h2>
+                    <div class="content-text">${data.content}</div>
+                `;
+            }
+            
+            // 활성화된 메뉴 표시
+            document.querySelectorAll('.submenu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
 
-  <!-- Main Content -->
-  <main class="main" id="main">
-    <!-- Topbar -->
-    <div class="topbar">
-      <div class="breadcrumb" id="breadcrumb">
-        <span>My Vault</span>
-        <span class="bc-sep">›</span>
-        <span class="bc-current" id="bcCurrent">Welcome</span>
-      </div>
-      <div class="topbar-right">
-        <button class="icon-btn" title="편집 모드">✏</button>
-        <button class="icon-btn" title="그래프 뷰">⊹</button>
-        <button class="icon-btn" title="더보기">⋯</button>
-      </div>
-    </div>
-
-    <!-- Page Content -->
-    <article class="content" id="contentArea">
-      <!-- Dynamically loaded -->
-    </article>
-
-    <!-- Graph View Canvas -->
-    <canvas id="graphCanvas" style="display:none;"></canvas>
-  </main>
-
-  <!-- Backlinks Panel -->
-  <aside class="backlinks-panel" id="backlinksPanel">
-    <div class="bl-header">백링크</div>
-    <div class="bl-list" id="blList"></div>
-
-    <div class="bl-header" style="margin-top:1.5rem;">아웃링크</div>
-    <div class="bl-list" id="outList"></div>
-  </aside>
-
-  <script src="app.js"></script>
+        // 초기화
+        renderMenu();
+    </script>
 </body>
 </html>
