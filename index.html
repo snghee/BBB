@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Obsidian Vault</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="vault-icon">⬡</div>
+      <span class="vault-name">My Vault</span>
+      <button class="sidebar-toggle" id="sidebarToggle" title="사이드바 접기">‹</button>
+    </div>
+
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+      <input type="text" placeholder="빠른 검색..." id="searchInput" />
+    </div>
+
+    <nav class="file-tree" id="fileTree">
+      <div class="tree-section">
+        <div class="tree-header" data-folder="home">
+          <span class="folder-arrow">▾</span>
+          <span class="folder-icon">📁</span>
+          <span>홈</span>
+        </div>
+        <div class="tree-children open" data-children="home">
+          <div class="tree-item active" data-page="welcome">
+            <span class="file-icon">📄</span>
+            <span>Welcome</span>
+          </div>
+          <div class="tree-item" data-page="about">
+            <span class="file-icon">📄</span>
+            <span>About Me</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tree-section">
+        <div class="tree-header" data-folder="notes">
+          <span class="folder-arrow">▾</span>
+          <span class="folder-icon">📁</span>
+          <span>노트</span>
+        </div>
+        <div class="tree-children open" data-children="notes">
+          <div class="tree-item" data-page="note1">
+            <span class="file-icon">📄</span>
+            <span>아이디어 메모</span>
+          </div>
+          <div class="tree-item" data-page="note2">
+            <span class="file-icon">📄</span>
+            <span>프로젝트 계획</span>
+          </div>
+          <div class="tree-item" data-page="note3">
+            <span class="file-icon">📄</span>
+            <span>독서 기록</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tree-section">
+        <div class="tree-header" data-folder="resources">
+          <span class="folder-arrow">▾</span>
+          <span class="folder-icon">📁</span>
+          <span>리소스</span>
+        </div>
+        <div class="tree-children open" data-children="resources">
+          <div class="tree-item" data-page="links">
+            <span class="file-icon">🔗</span>
+            <span>유용한 링크</span>
+          </div>
+          <div class="tree-item" data-page="graph">
+            <span class="file-icon">🕸</span>
+            <span>그래프 뷰</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="icon-btn" title="새 노트">✏️</button>
+      <button class="icon-btn" title="설정">⚙️</button>
+      <button class="icon-btn theme-toggle" id="themeToggle" title="테마 전환">🌙</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main" id="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="breadcrumb" id="breadcrumb">
+        <span>My Vault</span>
+        <span class="bc-sep">›</span>
+        <span class="bc-current" id="bcCurrent">Welcome</span>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" title="편집 모드">✏</button>
+        <button class="icon-btn" title="그래프 뷰">⊹</button>
+        <button class="icon-btn" title="더보기">⋯</button>
+      </div>
+    </div>
+
+    <!-- Page Content -->
+    <article class="content" id="contentArea">
+      <!-- Dynamically loaded -->
+    </article>
+
+    <!-- Graph View Canvas -->
+    <canvas id="graphCanvas" style="display:none;"></canvas>
+  </main>
+
+  <!-- Backlinks Panel -->
+  <aside class="backlinks-panel" id="backlinksPanel">
+    <div class="bl-header">백링크</div>
+    <div class="bl-list" id="blList"></div>
+
+    <div class="bl-header" style="margin-top:1.5rem;">아웃링크</div>
+    <div class="bl-list" id="outList"></div>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>
