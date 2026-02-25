@@ -235,85 +235,23 @@
             return html;
         }
 
-        // Google Drive 문서를 공개 공유 링크로 로드
-        async function loadFileFromGoogleDrive(fileId, itemName, folder) {
+        // Google Drive 문서를 iframe으로 임베드 (CORS 문제 없음)
+        function loadFileFromGoogleDrive(fileId, itemName, folder) {
+            // Google Docs 임베드 URL
+            const embedUrl = `https://docs.google.com/document/d/${fileId}/preview`;
+            
             content.innerHTML = `
                 <div class="breadcrumb">${folder} > ${itemName}</div>
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    <p>로딩 중...</p>
-                </div>
+                <iframe 
+                    src="${embedUrl}" 
+                    width="100%" 
+                    height="800px"
+                    style="border: none; margin-top: 10px;">
+                </iframe>
+                <p style="color: #999; font-size: 12px; margin-top: 10px;">
+                    💡 팁: 우클릭 → "다른 탭에서 열기"를 통해 전체 화면으로 볼 수 있습니다.
+                </p>
             `;
-
-            try {
-                // Google Drive 공개 공유 링크를 통해 파일 내용 가져오기
-                // 방법 1: 직접 다운로드 링크 (모든 파일 형식 지원)
-                const driveUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-                
-                console.log('Google Drive URL:', driveUrl);
-                
-                const response = await fetch(driveUrl, {
-                    mode: 'cors',
-                    credentials: 'omit'
-                });
-                
-                console.log('Response status:', response.status);
-                console.log('Response OK:', response.ok);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP 오류! 상태: ${response.status}`);
-                }
-                
-                const markdown = await response.text();
-                
-                console.log('마크다운 내용 길이:', markdown.length);
-                console.log('마크다운 타입:', typeof markdown);
-                
-                // 파일 내용 확인 (처음 200자)
-                if (markdown.length === 0) {
-                    throw new Error('파일 내용이 비어있습니다. 파일이 공개 설정인지 확인하세요.');
-                }
-                
-                if (typeof markdown !== 'string') {
-                    throw new Error(`마크다운 형식 오류: ${typeof markdown}`);
-                }
-                
-                const htmlContent = markdownToHtml(markdown);
-                
-                content.innerHTML = `
-                    <div class="breadcrumb">${folder} > ${itemName}</div>
-                    <div class="file-content">
-                        ${htmlContent}
-                    </div>
-                `;
-
-                currentFileId = fileId;
-                
-                // 활성화된 메뉴 표시
-                document.querySelectorAll('.submenu-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                if (event && event.target) {
-                    event.target.classList.add('active');
-                }
-            } catch (error) {
-                console.error('Google Drive 로드 오류:', error);
-                content.innerHTML = `
-                    <div class="breadcrumb">${folder} > ${itemName}</div>
-                    <div class="error">
-                        <strong>❌ Google Drive 파일 로드 오류</strong><br>
-                        ${error.message}<br><br>
-                        <small><strong>파일 ID:</strong> ${fileId}<br>
-                        <strong>해결 방법:</strong><br>
-                        1. Google Drive에서 파일 우클릭<br>
-                        2. "공유" 클릭<br>
-                        3. "링크가 있는 모든 사용자" 또는 "공개"로 변경<br>
-                        4. 파일이 Google Docs 형식인지 확인<br>
-                        5. 브라우저 콘솔(F12)에서 더 자세한 오류 메시지 확인
-                        </small>
-                    </div>
-                `;
-            }
         }
 
         // 파일 불러오기 (확장된 버전 - 로컬 또는 Google Drive)
