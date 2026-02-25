@@ -235,8 +235,8 @@
             return html;
         }
 
-        // Google Drive에서 파일 내용 로드
-        function loadFileFromGoogleDrive(fileId, itemName, folder) {
+        // Google Drive 문서를 공개 공유 링크로 로드
+        async function loadFileFromGoogleDrive(fileId, itemName, folder) {
             content.innerHTML = `
                 <div class="breadcrumb">${folder} > ${itemName}</div>
                 <div class="loading">
@@ -245,52 +245,51 @@
                 </div>
             `;
 
-            gapi.load('client', () => {
-                gapi.client.init({
-                    apiKey: GOOGLE_API_KEY,
-                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
-                }).then(() => {
-                    // Google Drive API를 통해 파일 내용 가져오기
-                    return gapi.client.drive.files.get({
-                        fileId: fileId,
-                        alt: 'media' // 파일 내용을 텍스트로 반환
-                    });
-                }).then(response => {
-                    const markdown = response.result;
-                    const htmlContent = markdownToHtml(markdown);
-                    
-                    content.innerHTML = `
-                        <div class="breadcrumb">${folder} > ${itemName}</div>
-                        <div class="file-content">
-                            ${htmlContent}
-                        </div>
-                    `;
+            try {
+                // Google Drive 공개 공유 링크를 통해 파일 내용 가져오기
+                // Google Docs: export?format=txt (텍스트 형식)
+                const driveUrl = `https://docs.google.com/document/d/${fileId}/export?format=txt`;
+                
+                const response = await fetch(driveUrl);
+                
+                if (!response.ok) {
+                    throw new Error('Google Drive 파일을 불러올 수 없습니다. 파일이 공개 설정인지 확인하세요.');
+                }
+                
+                const markdown = await response.text();
+                const htmlContent = markdownToHtml(markdown);
+                
+                content.innerHTML = `
+                    <div class="breadcrumb">${folder} > ${itemName}</div>
+                    <div class="file-content">
+                        ${htmlContent}
+                    </div>
+                `;
 
-                    currentFileId = fileId;
-                    
-                    // 활성화된 메뉴 표시
-                    document.querySelectorAll('.submenu-item').forEach(item => {
-                        item.classList.remove('active');
-                    });
-                    if (event && event.target) {
-                        event.target.classList.add('active');
-                    }
-                }).catch(error => {
-                    content.innerHTML = `
-                        <div class="breadcrumb">${folder} > ${itemName}</div>
-                        <div class="error">
-                            <strong>❌ Google Drive API 오류</strong><br>
-                            파일을 불러올 수 없습니다: ${error.message}<br><br>
-                            <small>해결 방법:<br>
-                            1. Google Cloud Console에서 API 키 생성<br>
-                            2. Google Drive API 활성화<br>
-                            3. API 키를 코드에 입력<br>
-                            4. Google Drive 파일이 공개 또는 공유 설정 확인
-                            </small>
-                        </div>
-                    `;
+                currentFileId = fileId;
+                
+                // 활성화된 메뉴 표시
+                document.querySelectorAll('.submenu-item').forEach(item => {
+                    item.classList.remove('active');
                 });
-            });
+                if (event && event.target) {
+                    event.target.classList.add('active');
+                }
+            } catch (error) {
+                content.innerHTML = `
+                    <div class="breadcrumb">${folder} > ${itemName}</div>
+                    <div class="error">
+                        <strong>❌ Google Drive 파일 로드 오류</strong><br>
+                        ${error.message}<br><br>
+                        <small>해결 방법:<br>
+                        1. Google Drive에서 파일 우클릭<br>
+                        2. "공유" 클릭<br>
+                        3. "링크가 있는 모든 사용자" 또는 "공개"로 설정<br>
+                        4. 파일이 Google Docs 형식인지 확인
+                        </small>
+                    </div>
+                `;
+            }
         }
 
         // 파일 불러오기 (확장된 버전 - 로컬 또는 Google Drive)
