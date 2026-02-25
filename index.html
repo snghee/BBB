@@ -161,8 +161,13 @@
         </div>
     </div>
 
+    <script src="https://apis.google.com/js/api.js"></script>
     <script>
-        // 메뉴 구조 정의 (파일 경로 포함)
+        // Google Drive API 설정
+        const GOOGLE_API_KEY = 'AIzaSyDOIdawmHgkx2wV04ohDl8_jaDNhOjibdg'; // Google Cloud에서 받은 API 키 입력
+        const CLIENT_ID = '906251648544-lv0g297k3e0ckde767lvritqkmv6eben.apps.googleusercontent.com'; // OAuth 2.0 클라이언트 ID
+
+        // 메뉴 구조 정의 (파일 경로 포함 - Google Drive 파일 ID)
         const menuData = {
             "소개": {
                 "회사 개요": "1yPluR2AWGLPDYhomVmFVF7grU4JWtGcc",
@@ -230,9 +235,66 @@
             return html;
         }
 
-        // 파일 불러오기
+        // Google Drive에서 파일 내용 로드
+        function loadFileFromGoogleDrive(fileId, itemName, folder) {
+            content.innerHTML = `
+                <div class="breadcrumb">${folder} > ${itemName}</div>
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>로딩 중...</p>
+                </div>
+            `;
+
+            gapi.load('client', () => {
+                gapi.client.init({
+                    apiKey: GOOGLE_API_KEY,
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+                }).then(() => {
+                    // Google Drive API를 통해 파일 내용 가져오기
+                    return gapi.client.drive.files.get({
+                        fileId: fileId,
+                        alt: 'media' // 파일 내용을 텍스트로 반환
+                    });
+                }).then(response => {
+                    const markdown = response.result;
+                    const htmlContent = markdownToHtml(markdown);
+                    
+                    content.innerHTML = `
+                        <div class="breadcrumb">${folder} > ${itemName}</div>
+                        <div class="file-content">
+                            ${htmlContent}
+                        </div>
+                    `;
+
+                    currentFileId = fileId;
+                    
+                    // 활성화된 메뉴 표시
+                    document.querySelectorAll('.submenu-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    if (event && event.target) {
+                        event.target.classList.add('active');
+                    }
+                }).catch(error => {
+                    content.innerHTML = `
+                        <div class="breadcrumb">${folder} > ${itemName}</div>
+                        <div class="error">
+                            <strong>❌ Google Drive API 오류</strong><br>
+                            파일을 불러올 수 없습니다: ${error.message}<br><br>
+                            <small>해결 방법:<br>
+                            1. Google Cloud Console에서 API 키 생성<br>
+                            2. Google Drive API 활성화<br>
+                            3. API 키를 코드에 입력<br>
+                            4. Google Drive 파일이 공개 또는 공유 설정 확인
+                            </small>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        // 파일 불러오기 (확장된 버전 - 로컬 또는 Google Drive)
         async function loadFile(filePath, itemName, folder) {
-            // 로딩 표시
             content.innerHTML = `
                 <div class="breadcrumb">${folder} > ${itemName}</div>
                 <div class="loading">
@@ -242,34 +304,38 @@
             `;
 
             try {
-                // 파일 경로 구성 (현재 폴더 기준)
-                const response = await fetch(filePath);
-                
-                if (!response.ok) {
-                    throw new Error(`파일을 찾을 수 없습니다: ${filePath}`);
-                }
-                
-                const markdown = await response.text();
-                
-                // 마크다운을 HTML로 변환
-                const htmlContent = markdownToHtml(markdown);
-                
-                // 콘텐츠 표시
-                content.innerHTML = `
-                    <div class="breadcrumb">${folder} > ${itemName}</div>
-                    <div class="file-content">
-                        ${htmlContent}
-                    </div>
-                `;
+                // Google Drive 파일 ID 판별 (길고 알파벳+숫자 조합)
+                if (/^[a-zA-Z0-9_-]{25,}$/.test(filePath)) {
+                    // Google Drive 파일 ID
+                    loadFileFromGoogleDrive(filePath, itemName, folder);
+                } else {
+                    // 로컬 마크다운 파일
+                    const response = await fetch(filePath);
+                    
+                    if (!response.ok) {
+                        throw new Error(`파일을 찾을 수 없습니다: ${filePath}`);
+                    }
+                    
+                    const markdown = await response.text();
+                    const htmlContent = markdownToHtml(markdown);
+                    
+                    content.innerHTML = `
+                        <div class="breadcrumb">${folder} > ${itemName}</div>
+                        <div class="file-content">
+                            ${htmlContent}
+                        </div>
+                    `;
 
-                currentFileId = filePath;
-                
-                // 활성화된 메뉴 표시
-                document.querySelectorAll('.submenu-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                event.target.classList.add('active');
-                
+                    currentFileId = filePath;
+                    
+                    // 활성화된 메뉴 표시
+                    document.querySelectorAll('.submenu-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    if (event && event.target) {
+                        event.target.classList.add('active');
+                    }
+                }
             } catch (error) {
                 content.innerHTML = `
                     <div class="breadcrumb">${folder} > ${itemName}</div>
