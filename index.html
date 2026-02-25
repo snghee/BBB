@@ -167,12 +167,12 @@
         const GOOGLE_API_KEY = 'AIzaSyDOIdawmHgkx2wV04ohDl8_jaDNhOjibdg'; // Google Cloud에서 받은 API 키 입력
         const CLIENT_ID = '906251648544-lv0g297k3e0ckde767lvritqkmv6eben.apps.googleusercontent.com'; // OAuth 2.0 클라이언트 ID
 
-        // 메뉴 구조 정의 (파일 경로 포함 - Google Drive 파일 ID)
+        // 메뉴 구조 정의 (파일 경로 포함 - Google Drive 파일 ID 또는 로컬 마크다운)
         const menuData = {
             "소개": {
                 "회사 개요": "1yPluR2AWGLPDYhomVmFVF7grU4JWtGcc",
-                "미션 & 비전": "1yPluR2AWGLPDYhomVmFVF7grU4JWtGcc",
-                "팀 소개": "1yPluR2AWGLPDYhomVmFVF7grU4JWtGcc"
+                "미션 & 비전": "mission-vision.md",
+                "팀 소개": "team-intro.md"
             },
             "서비스": {
                 "서비스 A": "service-a.md",
@@ -247,7 +247,8 @@
 
             try {
                 // Google Drive 공개 공유 링크를 통해 파일 내용 가져오기
-                const driveUrl = `https://docs.google.com/document/d/${fileId}/export?format=txt`;
+                // 방법 1: 직접 다운로드 링크 (모든 파일 형식 지원)
+                const driveUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
                 
                 console.log('Google Drive URL:', driveUrl);
                 
