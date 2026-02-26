@@ -626,7 +626,10 @@
                         content.innerHTML = `<div class="error">통계 로드 오류: ${err.message}</div>`;
                     }
                     return;
-                }\n                // Google Drive 파일 ID 판별 (길고 알파벳+숫자 조합)\n                if (/^[a-zA-Z0-9_-]{25,}$/.test(filePath)) {
+                }
+                
+                // Google Drive 파일 ID 판별 (길고 알파벳+숫자 조합)
+                if (/^[a-zA-Z0-9_-]{25,}$/.test(filePath)) {
                     // Google Drive 파일 ID
                     await loadFileFromGoogleDrive(filePath, itemName, folder);
                 } else {
