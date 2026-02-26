@@ -227,7 +227,7 @@
     <div class="content markdown-body" id="content">
         <div class="content-placeholder">
             <!-- SBJ 은행 CI: 실제 이미지 파일을 같은 폴더에 넣거나 URL로 교체하세요 -->
-            <img src="sbj-ci.png" alt="SBJ 은행 CI" class="initial-logo" />
+            <img src="sbj-ci.png" alt="SBJ 은행 CI" class="initial-logo" onerror="this.style.display='none'" />
             <p>👈 좌측 메뉴에서 항목을 선택하세요</p>
         </div>
     </div>
@@ -607,7 +607,19 @@
                             statsHtml += '<th style="padding: 10px; text-align: center;">다운로드 횟수</th>';
                             statsHtml += '<th style="padding: 10px; text-align: left;">초기 다운로드</th>';
                             statsHtml += '<th style="padding: 10px; text-align: left;">마지막 다운로드</th>';
-                            statsHtml += '</tr>';\n                            \n                            stats.forEach(stat => {\n                                statsHtml += '<tr style=\"border-bottom: 1px solid #eee;\">';\n                                statsHtml += `<td style=\"padding: 10px;\">${stat.fileName}</td>`;\n                                statsHtml += `<td style=\"padding: 10px; text-align: center; color: #3498db; font-weight: bold;\">${stat.count}회</td>`;\n                                statsHtml += `<td style=\"padding: 10px; font-size: 12px;\">${stat.firstDownload}</td>`;\n                                statsHtml += `<td style=\"padding: 10px; font-size: 12px;\">${stat.lastDownload}</td>`;\n                                statsHtml += '</tr>';\n                            });\n                            statsHtml += '</table>';\n                            statsHtml += `<p style=\"margin-top: 20px; color: #999; font-size: 12px;\">총 ${stats.length}개 파일, ${stats.reduce((sum, s) => sum + s.count, 0)}회 다운로드</p>`;\n                        }\n                        statsHtml += '</div>';\n                        content.innerHTML = statsHtml;\n                    } catch (err) {\n                        content.innerHTML = `<div class="error">통계 로드 오류: ${err.message}</div>`;\n                    }\n                    return;\n                }\n                \n                // Google Drive 파일 ID 판별 (길고 알파벳+숫자 조합)\n                if (/^[a-zA-Z0-9_-]{25,}$/.test(filePath)) {
+                            statsHtml += '</tr>';
+                            
+                            stats.forEach(stat => {
+                                statsHtml += '<tr style="border-bottom: 1px solid #eee;">';
+                                statsHtml += `<td style="padding: 10px;">${stat.fileName}</td>`;
+                                statsHtml += `<td style="padding: 10px; text-align: center; color: #3498db; font-weight: bold;">${stat.count}회</td>`;
+                                statsHtml += `<td style="padding: 10px; font-size: 12px;">${stat.firstDownload}</td>`;
+                                statsHtml += `<td style="padding: 10px; font-size: 12px;">${stat.lastDownload}</td>`;
+                                statsHtml += '</tr>';
+                            });
+                            statsHtml += '</table>';
+                            statsHtml += `<p style="margin-top: 20px; color: #999; font-size: 12px;">총 ${stats.length}개 파일, ${stats.reduce((sum, s) => sum + s.count, 0)}회 다운로드</p>`;
+                        }\n                        statsHtml += '</div>';\n                        content.innerHTML = statsHtml;\n                    } catch (err) {\n                        content.innerHTML = `<div class="error">통계 로드 오류: ${err.message}</div>`;\n                    }\n                    return;\n                }\n                \n                // Google Drive 파일 ID 판별 (길고 알파벳+숫자 조합)\n                if (/^[a-zA-Z0-9_-]{25,}$/.test(filePath)) {
                     // Google Drive 파일 ID
                     await loadFileFromGoogleDrive(filePath, itemName, folder);
                 } else {
