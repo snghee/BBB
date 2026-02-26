@@ -169,7 +169,9 @@
 
         // 메뉴 구조 정의 (로컬 마크다운 파일)
         // '서비스' 항목은 Google Drive 폴더에서 동적으로 로드됩니다.
-        const SERVICE_FOLDER_ID = '19VQbUHcEtMnTMR39ciOYMrS0RCGTAf7b'; // Google Drive 폴더 ID를 입력하세요
+        // Google Drive 폴더 ID(폴더 공유 URL에서 'folders/…' 뒤에 나오는 문자열)
+        // 예: https://drive.google.com/drive/folders/19VQbUHcEtMnTMR39ciOYMrS0RCGTAf7b
+        const SERVICE_FOLDER_ID = '19VQbUHcEtMnTMR39ciOYMrS0RCGTAf7b'; // 여기에 실제 ID를 입력하세요
 
         const menuData = {
             "소개": {
@@ -231,7 +233,7 @@
             if (driveMenuLoaded) return;
             driveMenuLoaded = true;
 
-            if (!SERVICE_FOLDER_ID || SERVICE_FOLDER_ID === '19VQbUHcEtMnTMR39ciOYMrS0RCGTAf7b') {
+            if (!SERVICE_FOLDER_ID || SERVICE_FOLDER_ID === 'YOUR_FOLDER_ID_HERE') {
                 const msgItem = document.createElement('div');
                 msgItem.className = 'submenu-item error';
                 msgItem.textContent = '서비스 폴더 ID가 설정되지 않았습니다. index.html에서 SERVICE_FOLDER_ID 값을 입력하세요.';
