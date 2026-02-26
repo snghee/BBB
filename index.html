@@ -374,22 +374,25 @@
         // Google Drive 파일 내용 미리보기 로드
         async function previewFileFromDrive(fileId, fileName) {
             try {
-                const driveUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-                const response = await fetch(driveUrl);
-                
-                if (response.ok) {
-                    let text = await response.text();
-                    // 테늤트 컸를 대비한 길이 제한
-                    if (text.length > 500) {
-                        text = text.substring(0, 500) + '\n\n[⋮ 단축된 내용 ⋮]';
-                    }
-                    
-                    document.getElementById('previewHeader').textContent = `파일: ${fileName}`;
-                    document.getElementById('previewContent').textContent = text;
-                    document.getElementById('filePreview').classList.add('show');
+                // Drive API를 이용하여 파일 내용 가져오기 (CORS 문제 회피)
+                await initGapiClient();
+                const response = await gapi.client.drive.files.get({
+                    fileId: fileId,
+                    alt: 'media'
+                });
+                let text = response.body;
+                if (typeof text !== 'string') {
+                    text = JSON.stringify(text);
                 }
+                // 길이 제한
+                if (text.length > 500) {
+                    text = text.substring(0, 500) + '\n\n[⋮ 단축된 내용 ⋮]';
+                }
+                document.getElementById('previewHeader').textContent = `파일: ${fileName}`;
+                document.getElementById('previewContent').textContent = text;
+                document.getElementById('filePreview').classList.add('show');
             } catch (err) {
-                console.error('파일 미리보기 로드 엤류:', err);
+                console.error('파일 미리보기 로드 오류:', err);
             }
         }
 
