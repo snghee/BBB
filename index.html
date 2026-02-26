@@ -226,8 +226,8 @@
     
     <div class="content markdown-body" id="content">
         <div class="content-placeholder">
-            <!-- SBJ 은행 CI: 실제 이미지 파일을 같은 폴더에 넣거나 URL로 교체하세요 -->
-            <img src="sbj-ci.png" alt="SBJ 은행 CI" class="initial-logo" onerror="this.style.display='none'" />
+            <div style="font-size: 60px; margin-bottom: 20px;">🏦</div>
+            <h1 style="margin-bottom: 10px;">SBJ Bank</h1>
             <p>👈 좌측 메뉴에서 항목을 선택하세요</p>
         </div>
     </div>
@@ -619,7 +619,14 @@
                             });
                             statsHtml += '</table>';
                             statsHtml += `<p style="margin-top: 20px; color: #999; font-size: 12px;">총 ${stats.length}개 파일, ${stats.reduce((sum, s) => sum + s.count, 0)}회 다운로드</p>`;
-                        }\n                        statsHtml += '</div>';\n                        content.innerHTML = statsHtml;\n                    } catch (err) {\n                        content.innerHTML = `<div class="error">통계 로드 오류: ${err.message}</div>`;\n                    }\n                    return;\n                }\n                \n                // Google Drive 파일 ID 판별 (길고 알파벳+숫자 조합)\n                if (/^[a-zA-Z0-9_-]{25,}$/.test(filePath)) {
+                        }
+                        statsHtml += '</div>';
+                        content.innerHTML = statsHtml;
+                    } catch (err) {
+                        content.innerHTML = `<div class="error">통계 로드 오류: ${err.message}</div>`;
+                    }
+                    return;
+                }\n                // Google Drive 파일 ID 판별 (길고 알파벳+숫자 조합)\n                if (/^[a-zA-Z0-9_-]{25,}$/.test(filePath)) {
                     // Google Drive 파일 ID
                     await loadFileFromGoogleDrive(filePath, itemName, folder);
                 } else {
