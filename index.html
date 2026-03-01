@@ -245,7 +245,7 @@
         const CLIENT_ID = '906251648544-lv0g297k3e0ckde767lvritqkmv6eben.apps.googleusercontent.com'; // OAuth 2.0 클라이언트 ID
 
         // 메뉴 구조 정의 (로컬 마크다운 파일)
-        // '자료실' 항목은 Google Drive 폴더에서 동적으로 로드됩니다.
+        // '자료실(구글드라이브)' 항목은 Google Drive 폴더에서 동적으로 로드됩니다.
         // Google Drive 폴더 ID(폴더 공유 URL에서 'folders/…' 뒤에 나오는 문자열)
         // 예: https://drive.google.com/drive/folders/19VQbUHcEtMnTMR39ciOYMrS0RCGTAf7b
         const SERVICE_FOLDER_ID = '19VQbUHcEtMnTMR39ciOYMrS0RCGTAf7b'; // 여기에 실제 ID를 입력하세요
@@ -256,7 +256,7 @@
                 "미션 & 비전": "mission-vision.md",
                 "팀 소개": "team-intro.md"
             },
-            "자료실": null, // 나중에 드라이브에서 로드
+            "자료실(구글드라이브)": null, // 나중에 드라이브에서 로드
             "문서": {
                 "사용 설명서": "user-manual.md",
                 "FAQ": "faq.md",
@@ -409,7 +409,7 @@
             if (!SERVICE_FOLDER_ID || SERVICE_FOLDER_ID === 'YOUR_FOLDER_ID_HERE') {
                 const msgItem = document.createElement('div');
                 msgItem.className = 'submenu-item error';
-                msgItem.textContent = '자료실 폴더 ID가 설정되지 않았습니다. index.html에서 SERVICE_FOLDER_ID 값을 입력하세요.';
+                msgItem.textContent = '자료실(구글드라이브) 폴더 ID가 설정되지 않았습니다. index.html에서 SERVICE_FOLDER_ID 값을 입력하세요.';
                 submenuElement.appendChild(msgItem);
                 return;
             }
@@ -687,8 +687,8 @@
                     e.stopPropagation();
                     const submenu = folderDiv.querySelector('.submenu');
                     submenu.classList.toggle('active');
-                    // 자료실 폴더는 클릭 시 드라이브 목록을 로드
-                    if (folder === '자료실' && submenu.childElementCount === 0) {
+                    // 자료실(구글드라이브) 폴더는 클릭 시 드라이브 목록을 로드
+                    if (folder === '자료실(구글드라이브)' && submenu.childElementCount === 0) {
                         await populateServiceMenu(submenu, folder);
                     }
                 };
