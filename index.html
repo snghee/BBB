@@ -252,10 +252,51 @@
     </div>
     
     <div class="content markdown-body" id="content">
-        <div class="content-placeholder">
-            <div style="font-size: 60px; margin-bottom: 20px;">🏦</div>
-            <h1 style="margin-bottom: 10px;">SBJ Bank</h1>
-            <p>👈 좌측 메뉴에서 항목을 선택하세요</p>
+        <div id="dashboard">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <span style="font-size:44px;">🏦</span>
+                    <div>
+                        <h1 style="font-size:24px; margin:0;">SBJ Bank</h1>
+                        <p style="color:#999; font-size:13px; margin:4px 0 0;">내부 자료 포털</p>
+                    </div>
+                </div>
+                <button onclick="resetAllStats()" style="padding:6px 14px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ 통계 초기화</button>
+            </div>
+
+            <!-- 요약 카드 -->
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px;">
+                <div style="background:#f0f7ff; border:1px solid #cce0ff; border-radius:10px; padding:20px; text-align:center;">
+                    <div style="font-size:32px; font-weight:bold; color:#3498db;" id="stat-visits">0</div>
+                    <div style="font-size:13px; color:#666; margin-top:6px;">👁️ 총 접속 횟수</div>
+                </div>
+                <div style="background:#f0fff4; border:1px solid #b2dfdb; border-radius:10px; padding:20px; text-align:center;">
+                    <div style="font-size:32px; font-weight:bold; color:#27ae60;" id="stat-downloads">0</div>
+                    <div style="font-size:13px; color:#666; margin-top:6px;">⬇️ 총 다운로드 횟수</div>
+                </div>
+                <div style="background:#fff8f0; border:1px solid #ffe0b2; border-radius:10px; padding:20px; text-align:center;">
+                    <div style="font-size:32px; font-weight:bold; color:#e67e22;" id="stat-files">0</div>
+                    <div style="font-size:13px; color:#666; margin-top:6px;">📄 다운로드된 파일 수</div>
+                </div>
+            </div>
+
+            <!-- 최근 접속 기록 -->
+            <div style="margin-bottom:24px;">
+                <h3 style="font-size:15px; margin-bottom:12px; color:#333;">📅 최근 접속 기록</h3>
+                <div id="visit-log" style="background:#f9f9f9; border:1px solid #eee; border-radius:8px; max-height:160px; overflow-y:auto; font-size:13px;">
+                    <div style="padding:14px; color:#aaa; text-align:center;">접속 기록이 없습니다.</div>
+                </div>
+            </div>
+
+            <!-- 다운로드 통계 -->
+            <div>
+                <h3 style="font-size:15px; margin-bottom:12px; color:#333;">⬇️ 파일 다운로드 통계</h3>
+                <div id="download-log" style="background:#f9f9f9; border:1px solid #eee; border-radius:8px; max-height:220px; overflow-y:auto; font-size:13px;">
+                    <div style="padding:14px; color:#aaa; text-align:center;">다운로드 기록이 없습니다.</div>
+                </div>
+            </div>
+
+            <p style="margin-top:20px; color:#bbb; font-size:12px; text-align:center;">👈 좌측 메뉴에서 항목을 선택하세요</p>
         </div>
     </div>
 
@@ -359,6 +400,7 @@
                 
                 localStorage.setItem('downloadStats', JSON.stringify(stats));
                 updateStatsDisplay();
+                renderDashboard();
             } catch (err) {
                 console.error('다운로드 통계 기록 엤류:', err);
             }
@@ -888,8 +930,76 @@ async function populateObsidianMenu(submenuElement, folderName) {
             }
         }
 
+        // -------- 접속/다운로드 통계 --------
+        function recordVisit() {
+            try {
+                let visits = JSON.parse(localStorage.getItem('visitLog')) || [];
+                const now = new Date().toLocaleString('ko-KR');
+                visits.unshift(now);
+                if (visits.length > 50) visits = visits.slice(0, 50); // 최대 50개
+                localStorage.setItem('visitLog', JSON.stringify(visits));
+            } catch(e) {}
+        }
+
+        function resetAllStats() {
+            if (!confirm('모든 통계를 초기화하시겠습니까?')) return;
+            localStorage.removeItem('visitLog');
+            localStorage.removeItem('downloadStats');
+            renderDashboard();
+        }
+
+        function renderDashboard() {
+            const dashboard = document.getElementById('dashboard');
+            if (!dashboard) return;
+
+            const visits = JSON.parse(localStorage.getItem('visitLog')) || [];
+            const downloads = JSON.parse(localStorage.getItem('downloadStats')) || [];
+            const totalDownloads = downloads.reduce((sum, s) => sum + s.count, 0);
+
+            // 요약 카드 업데이트
+            document.getElementById('stat-visits').textContent = visits.length;
+            document.getElementById('stat-downloads').textContent = totalDownloads;
+            document.getElementById('stat-files').textContent = downloads.length;
+
+            // 접속 기록
+            const visitLog = document.getElementById('visit-log');
+            if (visits.length === 0) {
+                visitLog.innerHTML = '<div style="padding:14px; color:#aaa; text-align:center;">접속 기록이 없습니다.</div>';
+            } else {
+                visitLog.innerHTML = visits.map((v, i) => `
+                    <div style="padding:8px 14px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
+                        <span style="color:#666;">${i + 1}번째 접속</span>
+                        <span style="color:#999;">${v}</span>
+                    </div>`).join('');
+            }
+
+            // 다운로드 통계
+            const downloadLog = document.getElementById('download-log');
+            if (downloads.length === 0) {
+                downloadLog.innerHTML = '<div style="padding:14px; color:#aaa; text-align:center;">다운로드 기록이 없습니다.</div>';
+            } else {
+                const sorted = [...downloads].sort((a, b) => b.count - a.count);
+                downloadLog.innerHTML = `
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr style="background:#f0f0f0; font-size:12px; color:#555;">
+                            <th style="padding:8px 14px; text-align:left;">파일명</th>
+                            <th style="padding:8px; text-align:center;">횟수</th>
+                            <th style="padding:8px 14px; text-align:right;">마지막 다운로드</th>
+                        </tr>
+                        ${sorted.map(s => `
+                        <tr style="border-bottom:1px solid #eee;">
+                            <td style="padding:8px 14px; color:#333;">${s.fileName}</td>
+                            <td style="padding:8px; text-align:center; font-weight:bold; color:#3498db;">${s.count}회</td>
+                            <td style="padding:8px 14px; text-align:right; color:#999; font-size:12px;">${s.lastDownload}</td>
+                        </tr>`).join('')}
+                    </table>`;
+            }
+        }
+
         // 초기화
+        recordVisit();
         renderMenu();
+        renderDashboard();
     </script>
 </body>
 </html>
