@@ -456,31 +456,55 @@
                 files.forEach(file => {
                     const menuItem = document.createElement('div');
                     menuItem.className = 'submenu-item';
-                    menuItem.textContent = file.name;
-                    
-                    // 마우스 호버 미리보기
-                    menuItem.onmouseenter = () => {
-                        previewFileFromDrive(file.id, file.name);
-                    };
-                    
-                    menuItem.onmouseleave = () => {
-                        hidePreview();
-                    };
-                    
-                    // 클릭 다운로드
-                    menuItem.onclick = (e) => {
+                    menuItem.textContent = '📄 ' + file.name;
+
+                    menuItem.onclick = async (e) => {
                         e.stopPropagation();
-                        // 활성화 스타일
                         document.querySelectorAll('.submenu-item').forEach(i => i.classList.remove('active'));
                         menuItem.classList.add('active');
-                        
-                        // 다운로드 단계에 기록
-                        recordDownload(file.name, file.id);
-                        
-                        // 다운로드 링크 열기
-                        const downloadUrl = `https://drive.google.com/uc?export=download&id=${file.id}`;
-                        window.open(downloadUrl, '_blank');
+
+                        const contentDiv = document.getElementById('content');
+                        contentDiv.innerHTML = `
+                            <div class="breadcrumb">자료실(구글드라이브) > ${file.name}</div>
+                            <div class="loading"><div class="loading-spinner"></div><p>파일 내용을 불러오는 중...</p></div>
+                        `;
+
+                        try {
+                            await initGapiClient();
+                            const res = await gapi.client.drive.files.get({ fileId: file.id, alt: 'media' });
+                            let text = res.body;
+                            if (typeof text !== 'string') text = JSON.stringify(text, null, 2);
+
+                            const isMd = file.name.endsWith('.md');
+                            const htmlContent = isMd ? markdownToHtml(text) : `<pre style="white-space:pre-wrap;word-break:break-word;">${text}</pre>`;
+                            const downloadUrl = `https://drive.google.com/uc?export=download&id=${file.id}`;
+
+                            recordDownload(file.name, file.id);
+
+                            contentDiv.className = 'content markdown-body';
+                            contentDiv.innerHTML = `
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                                    <div>
+                                        <div class="breadcrumb">자료실(구글드라이브) > ${file.name}</div>
+                                        <h2>${file.name}</h2>
+                                    </div>
+                                    <a href="${downloadUrl}" target="_blank"
+                                        onclick="recordDownload('${file.name}','${file.id}')"
+                                        style="padding:8px 16px; background:#3498db; color:white; border:none; border-radius:4px; cursor:pointer; text-decoration:none; white-space:nowrap;">
+                                        ⬇️ 다운로드
+                                    </a>
+                                </div>
+                                ${htmlContent}
+                            `;
+                        } catch (err) {
+                            console.error('Drive 파일 로드 오류:', err);
+                            contentDiv.innerHTML = `
+                                <div class="breadcrumb">자료실(구글드라이브) > ${file.name}</div>
+                                <div class="error">❌ 파일을 불러올 수 없습니다: ${err.message}</div>
+                            `;
+                        }
                     };
+
                     submenuElement.appendChild(menuItem);
                 });
             } catch (err) {
