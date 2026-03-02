@@ -466,98 +466,99 @@
         }
 
         // Obsidian 볼트 메뉴에서 파일을 가져와서 서브메뉴에 추가
-        async function populateObsidianMenu(submenuElement, folderName) {
-            if (obsidianMenuLoaded) return;
-            obsidianMenuLoaded = true;
+async function populateObsidianMenu(submenuElement, folderName) {
+    if (obsidianMenuLoaded) return;
+    obsidianMenuLoaded = true;
 
-            try {
-                // 로컬 서버에서 Obsidian 파일 목록 가져오기
-                const response = await fetch('http://localhost:3000/api/obsidian-files');
-                if (!response.ok) throw new Error('파일 목록을 불러올 수 없습니다');
-                const files = await response.json();
+    try {
+        const response = await fetch('http://localhost:3000/api/obsidian-files');
+        if (!response.ok) throw new Error('파일 목록을 불러올 수 없습니다');
+        const files = await response.json();
 
-                if (files.length === 0) {
-                    const emptyItem = document.createElement('div');
-                    emptyItem.className = 'submenu-item';
-                    emptyItem.textContent = '(파일이 없습니다)';
-                    submenuElement.appendChild(emptyItem);
-                    return;
-                }
-
-                // 폴더 그룹으로 정렬
-                const grouped = {};
-                files.forEach(file => {
-                    const folder = file.path.includes('/') ? 
-                        file.path.split('/')[0] : '루트';
-                    if (!grouped[folder]) grouped[folder] = [];
-                    grouped[folder].push(file);
-                });
-
-                // 각 폴더별로 표시
-                Object.keys(grouped).sort().forEach(folder => {
-                    const folderDiv = document.createElement('div');
-                    folderDiv.style.fontSize = '13px';
-                    folderDiv.style.marginTop = '8px';
-                    folderDiv.style.opacity = '0.7';
-                    folderDiv.textContent = '📁 ' + folder;
-                    submenuElement.appendChild(folderDiv);
-
-                    grouped[folder].forEach(file => {
-                        const menuItem = document.createElement('div');
-                        menuItem.className = 'submenu-item';
-                        menuItem.textContent = file.name;
-                        menuItem.style.paddingLeft = '20px';
-                        
-                        // 클릭 핸들러
-                        menuItem.onclick = async (e) => {
-                            e.stopPropagation();
-                            
-                            // 활성화 스타일
-                            document.querySelectorAll('.submenu-item').forEach(i => {
-                                if (i.style.paddingLeft === '20px') {
-                                    i.classList.remove('active');
-                                }
-                            });
-                            menuItem.classList.add('active');
-
-                            try {
-                                // 파일 내용 로드
-                                const fileRes = await fetch(`http://localhost:3000/api/obsidian-file/${encodeURIComponent(file.path)}`);
-                                if (!fileRes.ok) throw new Error('파일을 불러올 수 없습니다');
-                                const data = await fileRes.text();
-                                
-                                // 마크다운을 HTML로 변환하여 표시
-                                const htmlContent = markdownToHtml(data);
-                                const contentDiv = document.getElementById('content');
-                                contentDiv.innerHTML = `
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                        <h2>${file.name}</h2>
-                                        <button onclick="downloadObsidianFile('${file.path}', '${file.name}')" 
-                                            style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                            ⬇️ 다운로드
-                                        </button>
-                                    </div>
-                                    ${htmlContent}
-                                `;
-                                contentDiv.className = 'content markdown-body';
-                            } catch (err) {
-                                console.error('파일 로드 오류:', err);
-                                document.getElementById('content').innerHTML = `<p style="color: red;">파일을 불러올 수 없습니다: ${err.message}</p>`;
-                            }
-                        };
-                        
-                        submenuElement.appendChild(menuItem);
-                    });
-                });
-
-            } catch (err) {
-                console.error('Obsidian 파일 목록 로드 오류:', err);
-                const errorItem = document.createElement('div');
-                errorItem.className = 'submenu-item error';
-                errorItem.textContent = '⚠️ 로컬 서버가 실행 중이 아닙니다. server.js를 시작하세요.';
-                submenuElement.appendChild(errorItem);
-            }
+        if (files.length === 0) {
+            const emptyItem = document.createElement('div');
+            emptyItem.className = 'submenu-item';
+            emptyItem.textContent = '(파일이 없습니다)';
+            submenuElement.appendChild(emptyItem);
+            return;
         }
+
+        // 폴더별로 그룹핑
+        const grouped = {};
+        files.forEach(file => {
+            const folder = file.folder || '루트';
+            if (!grouped[folder]) grouped[folder] = [];
+            grouped[folder].push(file);
+        });
+
+        // 폴더별로 렌더링
+        Object.keys(grouped).sort().forEach(folder => {
+            // 폴더 헤더
+            const folderDiv = document.createElement('div');
+            folderDiv.style.cssText = 'font-size:12px; margin-top:10px; padding:4px 8px; background:#3d5166; color:#a8c0d6; border-radius:3px; cursor:pointer;';
+            folderDiv.textContent = '📁 ' + folder;
+
+            const fileList = document.createElement('div');
+            fileList.style.display = 'none'; // 기본 접힘
+
+            folderDiv.onclick = (e) => {
+                e.stopPropagation();
+                fileList.style.display = fileList.style.display === 'none' ? 'block' : 'none';
+            };
+
+            submenuElement.appendChild(folderDiv);
+            submenuElement.appendChild(fileList);
+
+            // 파일 목록
+            grouped[folder].forEach(file => {
+                const menuItem = document.createElement('div');
+                menuItem.className = 'submenu-item';
+                menuItem.textContent = '📄 ' + file.name;
+                menuItem.style.paddingLeft = '20px';
+
+                menuItem.onclick = async (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.submenu-item').forEach(i => i.classList.remove('active'));
+                    menuItem.classList.add('active');
+
+                    try {
+                        const fileRes = await fetch(`http://localhost:3000/api/obsidian-file/${encodeURIComponent(file.path)}`);
+                        if (!fileRes.ok) throw new Error('파일을 불러올 수 없습니다');
+                        const data = await fileRes.text();
+
+                        const htmlContent = markdownToHtml(data);
+                        const contentDiv = document.getElementById('content');
+                        contentDiv.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                                <div>
+                                    <div class="breadcrumb">자료실(옵시디안) > ${folder} > ${file.name}</div>
+                                    <h2>${file.name}</h2>
+                                </div>
+                                <button onclick="downloadObsidianFile('${file.path}', '${file.name}')"
+                                    style="padding:8px 16px; background:#3498db; color:white; border:none; border-radius:4px; cursor:pointer;">
+                                    ⬇️ 다운로드
+                                </button>
+                            </div>
+                            ${htmlContent}
+                        `;
+                        contentDiv.className = 'content markdown-body';
+                    } catch (err) {
+                        console.error('파일 로드 오류:', err);
+                        document.getElementById('content').innerHTML = `<p style="color:red;">파일을 불러올 수 없습니다: ${err.message}</p>`;
+                    }
+                };
+                fileList.appendChild(menuItem);
+            });
+        });
+
+    } catch (err) {
+        console.error('Obsidian 파일 목록 로드 오류:', err);
+        const errorItem = document.createElement('div');
+        errorItem.className = 'submenu-item error';
+        errorItem.textContent = '⚠️ 로컬 서버가 실행 중이 아닙니다. server.js를 시작하세요.';
+        submenuElement.appendChild(errorItem);
+    }
+}
 
         // Obsidian 파일 다운로드
         async function downloadObsidianFile(filePath, fileName) {
